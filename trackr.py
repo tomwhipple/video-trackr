@@ -25,7 +25,6 @@ def main(argv=None):
         print "No video source given!"
         return
         
-    # video = cv2.VideoCapture(source)
     video = cv2.VideoCapture()
     video.open(source)
     
@@ -33,7 +32,11 @@ def main(argv=None):
         print "Video not open"
         return
         
-    #import pdb; pdb.set_trace()
+    width = video.get(cv.CV_CAP_PROP_FRAME_WIDTH)
+    height = video.get(cv.CV_CAP_PROP_FRAME_HEIGHT)
+    fps = video.get(cv.CV_CAP_PROP_FPS)
+    
+    print "opened {w}x{h} video @ {f} fps".format(w=width,h=height,f=fps)
     
     
 if __name__ == '__main__':
