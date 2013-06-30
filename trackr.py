@@ -9,8 +9,19 @@ import argparse
 
 import cv
 import cv2
+import numpy as np
 
 WIN_NAME = "trackr"
+
+# TODO: wtf do these do, exactly?
+# http://docs.opencv.org/modules/video/doc/motion_analysis_and_object_tracking.html#calcmotiongradient
+MOTION_DELTA1=2
+MOTION_DELTA2=5
+
+def make_nth_named_window(name, height, n=0, x=0):
+    cv2.namedWindow(name)
+    y = n * height
+    cv2.moveWindow(name, x, y)
 
 def main(argv=None):
     if argv is None:
@@ -41,9 +52,18 @@ def main(argv=None):
     
     print "opened {w}x{h} video @ {f}fps".format(w=width,h=height,f=fps)
     
-    cv2.namedWindow(WIN_NAME)
-    cv2.moveWindow(WIN_NAME, 0, 0)
-    cv2.resizeWindow(WIN_NAME, width, height)
+    HISTORY_NAME = "motion history"
+    MASK_NAME = "motion mask"
+    ORIENTATION_NAME = "orientation"
+    
+    make_nth_named_window(WIN_NAME, height)
+    make_nth_named_window(HISTORY_NAME, height, 1)
+    make_nth_named_window(MASK_NAME, height, 2)
+    make_nth_named_window(ORIENTATION_NAME, height, 3)
+    
+    motionHistory = np.zeros([width, height, 1], dtype=float)
+    motionMask = None
+    orientation = None
     
     frame_count = 0
     while video.grab():
@@ -57,7 +77,13 @@ def main(argv=None):
         sys.stdout.flush()
         
         cv2.imshow(WIN_NAME, frame)
-        # time.sleep(0.01)
+        cv2.imshow(HISTORY_NAME, motionHistory)
+        
+        motionMask, orientation = cv2.calcMotion(motionHistory, MOTION_DELTA1, MOTION_DELTA2)
+        
+        cv2.imshow(MASK_NAME, motionMask)
+        cv2.imshow(ORIENTATION_NAME, orientation)
+        
         key = cv2.waitKey(int(1000.0/fps))
         if key == 27:
             return
