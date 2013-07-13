@@ -29,7 +29,10 @@ def main(argv=None):
     
     parser = argparse.ArgumentParser(description="Track moving objects in a video stream")
     
-    parser.add_argument("-f", "--file", help="use given file")
+    parser.add_argument("-f", "--file", 
+                        help="use given file")
+    parser.add_argument("-p", "--play-only", action="store_true",
+                        help="playback only. Don't do any recognition. Useful for sanity checking files or installation")
     
     args = parser.parse_args(argv)
     
@@ -57,13 +60,17 @@ def main(argv=None):
     ORIENTATION_NAME = "orientation"
     
     make_nth_named_window(WIN_NAME, height)
-    make_nth_named_window(HISTORY_NAME, height, 1)
-    make_nth_named_window(MASK_NAME, height, 2)
-    make_nth_named_window(ORIENTATION_NAME, height, 3)
     
-    motionHistory = np.zeros([width, height, 1], dtype=float)
-    motionMask = None
-    orientation = None
+    if not args.play_only:
+        make_nth_named_window(HISTORY_NAME, height, 1)
+        make_nth_named_window(MASK_NAME, height, 2)
+        make_nth_named_window(ORIENTATION_NAME, height, 3)
+    
+        motionHistory = Mat(width, height, cv.CV_32FC1)
+    
+        # motionHistory = np.zeros([width, height, 1], dtype=cv.CV_FLOAT)
+        motionMask = motionHistory.copy()
+        orientation = motionHistory.copy()
     
     frame_count = 0
     while video.grab():
@@ -77,12 +84,14 @@ def main(argv=None):
         sys.stdout.flush()
         
         cv2.imshow(WIN_NAME, frame)
-        cv2.imshow(HISTORY_NAME, motionHistory)
         
-        motionMask, orientation = cv2.calcMotion(motionHistory, MOTION_DELTA1, MOTION_DELTA2)
+        if not args.play_only:
+            cv2.imshow(HISTORY_NAME, motionHistory)
         
-        cv2.imshow(MASK_NAME, motionMask)
-        cv2.imshow(ORIENTATION_NAME, orientation)
+            motionMask, orientation = cv2.calcMotionGradient(motionHistory, MOTION_DELTA1, MOTION_DELTA2)
+        
+            cv2.imshow(MASK_NAME, motionMask)
+            cv2.imshow(ORIENTATION_NAME, orientation)
         
         key = cv2.waitKey(int(1000.0/fps))
         if key == 27:

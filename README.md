@@ -24,3 +24,4 @@ Running
 
 It's best to work with downsampeled videos for development. 426x240 seems reasonable. ffmpeg can be used to resize the video.
 
+Start by just playing a video: `$ ./trackr.py -p -f videos/circles_240.avi`
