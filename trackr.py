@@ -86,7 +86,7 @@ def main(argv=None):
         print "frame: {c}   \r".format(c=frame_count), 
         sys.stdout.flush()
         
-        cv2.imshow(WIN_NAME, frame)
+        display = frame.copy()
         
         timestamp = float(frame_count) / fps
         
@@ -107,6 +107,25 @@ def main(argv=None):
             
             # cv2.imshow(ORIENTATION_NAME, mgrad_orient)
             
+            for i, rect in enumerate([(0, 0, width, height)] + list(mseg_bounds)):
+                x, y, rw, rh = rect
+                area = rw * rh
+                # TODO: where does 64**2 come from?
+                if area < 64**2:
+                    continue
+                motion_roi = motion_mask[y:y+rh, x:x+rw]
+                if cv2.norm(motion_roi, cv2.NORM_L1) < 0.05 * area:
+                    # eliminate small things
+                    continue
+                # mgrad_orient_roi = mgrad_orient[y:y+rh, x:x+rw]
+                # mgrad_mask_roi = mgrad_mask[y:y+rh, x:x+rw]
+                # motion_hist_roi = motion_history[y:y+rh, x:x+rw]
+                # angle = cv2.calcGlobalOrientation(mgrad_orient_roi, mgrad_mask_roi, motion_hist_roi, timestamp, args.max_track_time)
+                
+                cv2.rectangle(display, (x, y), (rw, rh), (0, 255, 0))
+                            
+            cv2.imshow(WIN_NAME, display)
+    
             prev_frame = frame
         
         key = cv2.waitKey(int(1000.0/fps))
@@ -116,8 +135,6 @@ def main(argv=None):
             print "\nkey: {k}\n".format(k=key)
         
     print
-    
-    # cv2.waitKey()
     video.release()
     
 if __name__ == '__main__':
