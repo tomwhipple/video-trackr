@@ -75,6 +75,8 @@ def main(argv=None):
     prev_frame = None
     
     frame_count = 0
+    frame_interval_normal = int(1000.0/fps)
+    frame_interval = frame_interval_normal
     while video.grab():
         got_frame, frame = video.retrieve()
         
@@ -106,12 +108,14 @@ def main(argv=None):
             mseg_mask, mseg_bounds = cv2.segmentMotion(motion_history, timestamp, MAX_TIME_DELTA)
             
             # cv2.imshow(ORIENTATION_NAME, mgrad_orient)
+            if frame_interval == 0:
+                import pdb; pdb.set_trace()
             
             for i, rect in enumerate([(0, 0, width, height)] + list(mseg_bounds)):
                 x, y, rw, rh = rect
                 area = rw * rh
                 # TODO: where does 64**2 come from?
-                if area < 64**2:
+                if area < 64*2:
                     continue
                 motion_roi = motion_mask[y:y+rh, x:x+rw]
                 if cv2.norm(motion_roi, cv2.NORM_L1) < 0.05 * area:
@@ -122,15 +126,18 @@ def main(argv=None):
                 # motion_hist_roi = motion_history[y:y+rh, x:x+rw]
                 # angle = cv2.calcGlobalOrientation(mgrad_orient_roi, mgrad_mask_roi, motion_hist_roi, timestamp, args.max_track_time)
                 
-                cv2.rectangle(display, (x, y), (rw, rh), (0, 255, 0))
+                cv2.rectangle(display, (x, y), (x+rw, y+rh), (0, 255, 0))
                             
             cv2.imshow(WIN_NAME, display)
     
             prev_frame = frame
         
-        key = cv2.waitKey(int(1000.0/fps))
+        key = cv2.waitKey(frame_interval)
         if key == 27:
             return
+        elif key == 32:
+            # toggle pause on space
+            frame_interval = 0 if frame_interval !=0 else frame_interval_normal
         elif key >= 0:
             print "\nkey: {k}\n".format(k=key)
         
