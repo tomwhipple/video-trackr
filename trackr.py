@@ -18,6 +18,9 @@ WIN_NAME = "trackr"
 MAX_TIME_DELTA = 0.25
 MIN_TIME_DELTA = 0.05
 
+GREEN = (0, 255, 0)
+FONT = cv.CV_FONT_HERSHEY_PLAIN
+
 def make_nth_named_window(name, height, n=0, x=0):
     cv2.namedWindow(name)
     y = n * height
@@ -108,8 +111,8 @@ def main(argv=None):
             mseg_mask, mseg_bounds = cv2.segmentMotion(motion_history, timestamp, MAX_TIME_DELTA)
             
             # cv2.imshow(ORIENTATION_NAME, mgrad_orient)
-            if frame_interval == 0:
-                import pdb; pdb.set_trace()
+            # if frame_interval == 0:
+            #     import pdb; pdb.set_trace()
             
             for i, rect in enumerate([(0, 0, width, height)] + list(mseg_bounds)):
                 x, y, rw, rh = rect
@@ -121,12 +124,13 @@ def main(argv=None):
                 if cv2.norm(motion_roi, cv2.NORM_L1) < 0.05 * area:
                     # eliminate small things
                     continue
-                # mgrad_orient_roi = mgrad_orient[y:y+rh, x:x+rw]
-                # mgrad_mask_roi = mgrad_mask[y:y+rh, x:x+rw]
-                # motion_hist_roi = motion_history[y:y+rh, x:x+rw]
-                # angle = cv2.calcGlobalOrientation(mgrad_orient_roi, mgrad_mask_roi, motion_hist_roi, timestamp, args.max_track_time)
+                mgrad_orient_roi = mgrad_orient[y:y+rh, x:x+rw]
+                mgrad_mask_roi = mgrad_mask[y:y+rh, x:x+rw]
+                motion_hist_roi = motion_history[y:y+rh, x:x+rw]
+                angle = cv2.calcGlobalOrientation(mgrad_orient_roi, mgrad_mask_roi, motion_hist_roi, timestamp, args.max_track_time)
                 
-                cv2.rectangle(display, (x, y), (x+rw, y+rh), (0, 255, 0))
+                cv2.rectangle(display, (x, y), (x+rw, y+rh), GREEN)
+                cv2.putText(display, "{:.1f}".format(angle), (x, y+rh), FONT, 1, GREEN)
                             
             cv2.imshow(WIN_NAME, display)
     
